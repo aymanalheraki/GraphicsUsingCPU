@@ -11,18 +11,21 @@
 using namespace std;
 
 
-void direct_fill_blue(SDL_Surface* surface){
-  SDL_LockSurface(surface);
-  uint32_t* pixelsArray = (uint32_t*)surface->pixels;
+void pixel_access(SDL_Surface* surface){
+  uint32_t* pixels = (uint32_t*)surface->pixels;
   int pitch = surface->pitch / 4;
   
   for(int y = 0; y < surface->h; ++y){
     for( int x = 0; x < surface->w; ++x){
-      pixelsArray[y * pitch + x] = 0xFF0000FF;
+      uint32_t pixel = pixels[y*pitch + x];
+      uint8_t a = (pixel >> 24) & 0xFF;
+      uint8_t r = (pixel >> 16) & 0xFF;
+      uint8_t g = (pixel >> 8) & 0xFF;
+      uint8_t b = pixel & 0xFF;
+      // printing the pixels values crashes the program
+      //cout << "a = " << a << " r = " << r << " g = " << g << " b = " << b << "\n";
     }
   }
-
-  SDL_UnlockSurface(surface);
 }
 
 
@@ -51,11 +54,14 @@ int main(int argc, char** args) {
     return 1;
   }
 
-  // Direct memory access white filling
-  direct_fill_blue(surface);
+  // Convert framebuffer to ARGB8888 pixel format
+  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_ARGB8888);
 
   SDL_UpdateWindowSurface( window );
-    
+  
+  // Direct memory access pixel reading
+  pixel_access(surface);
+  
   while(!quit){
     SDL_WaitEvent(&event);
     if (event.type == SDL_EVENT_QUIT){
