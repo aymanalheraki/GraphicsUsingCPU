@@ -40,7 +40,7 @@ int main(int argc, char** args) {
     cout << "Error initializing SDL: " << SDL_GetError() << endl;
     return 1;
   } 
-  window = SDL_CreateWindow( "Direct Read and Write Pixels", 1280, 720, SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow( "Pixel Access", 1280, 720, SDL_WINDOW_RESIZABLE);
 
   if ( !window ) {
     cout << "Error creating window: " << SDL_GetError()  << endl;
