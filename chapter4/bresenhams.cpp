@@ -11,17 +11,33 @@
 using namespace std;
 
 
-void setPixelARBG32(SDL_Surface* framebuffer, int stride, int x, int y, uint8_t a, uint8_t r, uint8_t g, uint8_t b){
+void drawLineBresenhams(int x0, int y0, int x1, int y1, uint32_t color, SDL_Surface* framebuffer, int stride){
   SDL_LockSurface(framebuffer);
-  int offset = y * stride + x;
+
+  int dx = abs(x1-x0);
+  int dy = abs(y1-y0);
+  int sx = (x0 < x1) ? 1 : -1;
+  int sy = (y0 < y1) ? 1 : -1;
+  int err = dx - dy;
   uint32_t* pixelPtr = (uint32_t*)framebuffer->pixels;
-  uint32_t pixelValue = (static_cast<uint32_t>(a) << 24)|
-                        (static_cast<uint32_t>(r) << 16)|
-                        (static_cast<uint32_t>(g) << 8)|
-                        (static_cast<uint32_t>(b));
-  pixelPtr[offset] = pixelValue;
+
+  while(true){
+    int offset = y0 * stride + x0;
+    pixelPtr[offset] = color;
+    if(x0 == x1 && y0 == y1) break;
+    int e2 = 2 * err;
+    if(e2 > -dy) {
+      err -= dy;
+      x0 += sx;
+    }
+    if(e2 < dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
   SDL_UnlockSurface(framebuffer);
 }
+
 
 int main(int argc, char** args) {
   
@@ -34,7 +50,7 @@ int main(int argc, char** args) {
     cout << "Error initializing SDL: " << SDL_GetError() << endl;
     return 1;
   } 
-  window = SDL_CreateWindow( "Set Pixel", 1280, 720, SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow( "Draw Line Using Bresenhams Algorythm", 1280, 720, SDL_WINDOW_RESIZABLE);
 
   if ( !window ) {
     cout << "Error creating window: " << SDL_GetError()  << endl;
@@ -48,9 +64,9 @@ int main(int argc, char** args) {
     return 1;
   }
 
-  // Directly set pixel with ARBG32
-  setPixelARBG32(surface, 4, 25000, 20000, 255, 0, 255, 0);
-
+  // Draw line using brenham's line algorithm
+  // Drawing white line from coordinates (100,100) to (500,500)
+  drawLineBresenhams(100, 100, 500, 500, 0xFFFFFFFF, surface, 1280);
   SDL_UpdateWindowSurface( window );
     
   while(!quit){
