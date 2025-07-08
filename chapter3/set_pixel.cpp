@@ -13,8 +13,7 @@ using namespace std;
 
 void setPixelARBG32(SDL_Surface* framebuffer, int stride, int x, int y, uint8_t a, uint8_t r, uint8_t g, uint8_t b){
   SDL_LockSurface(framebuffer);
-  int bytesPerPixel = 4;
-  int offset = y * stride + x * bytesPerPixel;
+  int offset = y * stride + x;
   uint32_t* pixelPtr = (uint32_t*)framebuffer->pixels;
   uint32_t pixelValue = (static_cast<uint32_t>(a) << 24)|
                         (static_cast<uint32_t>(r) << 16)|

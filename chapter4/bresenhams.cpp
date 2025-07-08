@@ -11,7 +11,7 @@
 using namespace std;
 
 
-void drawLineBresenhams(int x0, int y0, int x1, int y1, uint32_t color, SDL_Surface* framebuffer, int stride, int bytesPerPixel){
+void drawLineBresenhams(int x0, int y0, int x1, int y1, uint32_t color, SDL_Surface* framebuffer, int stride){
   SDL_LockSurface(framebuffer);
 
   int dx = abs(x1-x0);
@@ -66,7 +66,7 @@ int main(int argc, char** args) {
 
   // Draw line using brenham's line algorithm
   // Drawing white line from coordinates (100,100) to (500,500)
-  drawLineBresenhams(100, 100, 500, 500, 0xFFFFFFFF, surface, 1280, 4);
+  drawLineBresenhams(100, 100, 500, 500, 0xFFFFFFFF, surface, 1280);
   SDL_UpdateWindowSurface( window );
     
   while(!quit){
