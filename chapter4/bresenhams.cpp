@@ -22,8 +22,7 @@ void drawLineBresenhams(int x0, int y0, int x1, int y1, uint32_t color, SDL_Surf
   uint32_t* pixelPtr = (uint32_t*)framebuffer->pixels;
 
   while(true){
-    int offset = y0 * stride + x0 * bytesPerPixel;
-    //FIXME: try (5,15) to (500,100)
+    int offset = y0 * stride + x0;
     pixelPtr[offset] = color;
     if(x0 == x1 && y0 == y1) break;
     int e2 = 2 * err;
@@ -66,8 +65,8 @@ int main(int argc, char** args) {
   }
 
   // Draw line using brenham's line algorithm
-  // Drawing while line from coordinates (5,15) to (50,100)
-  drawLineBresenhams(5, 15, 50, 100, 0xFFFFFFFF, surface, 1280, 4);
+  // Drawing white line from coordinates (100,100) to (500,500)
+  drawLineBresenhams(100, 100, 500, 500, 0xFFFFFFFF, surface, 1280, 4);
   SDL_UpdateWindowSurface( window );
     
   while(!quit){
