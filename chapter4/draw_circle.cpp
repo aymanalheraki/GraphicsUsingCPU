@@ -78,7 +78,7 @@ int main(int argc, char** args) {
     return 1;
   }
 
-  //Draw a white circle at coordinates (10, 10) with half radios 10
+  //Draw a white circle at coordinates (10, 10) with radios 10
   drawMidpointCircle(10, 10, 10, 0xFFFFFFFF, surface, 1280);
   SDL_UpdateWindowSurface( window );
     
