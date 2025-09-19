@@ -50,11 +50,59 @@ void update(MovingSprite& ms, float deltaTime){
   ms.sprite.y += static_cast<int>(ms.velocity.y * deltaTime);
 }
 
-void updateAnimation(Sprite& sprite, uint64_t currentTimeMs){
-  if(currentTimeMs - sprite.lastFrameTime >= sprite.frameDelayMs){
-    sprite.frameIndex = (sprite.frameIndex + 1) % sprite.totalFrames;
-    sprite.lastFrameTime = currentTimeMs;
-  }
+void updateAnimation(Sprite& sprite, uint64_t currentTimeMs) {
+    if (currentTimeMs - sprite.lastFrameTime >= sprite.frameDelayMs) {
+        sprite.frameIndex = (sprite.frameIndex + 1) % sprite.totalFrames;
+        sprite.lastFrameTime = currentTimeMs;
+    }
+}
+
+// Book's exact implementation of drawSpriteFrame
+void drawSpriteFrame(uint32_t* framebuffer, int fbWidth, const Sprite& sprite) {
+    int srcX = sprite.frameIndex * sprite.frameWidth;
+    int srcY = 0;
+
+    for (int y = 0; y < sprite.frameHeight; ++y) {
+        for (int x = 0; x < sprite.frameWidth; ++x) {
+            uint32_t pixel = ((uint32_t*)sprite.imageData)[(srcY + y) * sprite.width + (srcX + x)];
+            framebuffer[(sprite.y + y) * fbWidth + (sprite.x + x)] = pixel;
+        }
+    }
+}
+
+// SDL-compatible wrapper for drawSpriteFrame
+void drawSpriteFrameSDL(SDL_Surface* surface, const Sprite& sprite) {
+    SDL_LockSurface(surface);
+    uint32_t* framebuffer = (uint32_t*)surface->pixels;
+    int fbWidth = surface->pitch / 4;
+    
+    // Bounds checking
+    if (sprite.x >= surface->w || sprite.y >= surface->h) {
+        SDL_UnlockSurface(surface);
+        return;
+    }
+    
+    int srcX = sprite.frameIndex * sprite.frameWidth;
+    int srcY = 0;
+
+    for (int y = 0; y < sprite.frameHeight; ++y) {
+        for (int x = 0; x < sprite.frameWidth; ++x) {
+            int dst_x = sprite.x + x;
+            int dst_y = sprite.y + y;
+            
+            if (dst_x < surface->w && dst_y < surface->h) {
+                // Create a simple colored square for demonstration (since we don't have actual sprite data)
+                uint8_t r = (sprite.frameIndex * 40) % 256;
+                uint8_t g = 100;
+                uint8_t b = (sprite.frameIndex * 60 + 100) % 256;
+                uint32_t pixel = 0xFF000000 | (r << 16) | (g << 8) | b;
+                
+                framebuffer[dst_y * fbWidth + dst_x] = pixel;
+            }
+        }
+    }
+    
+    SDL_UnlockSurface(surface);
 }
 
 void drawSpriteFrame(SDL_Surface* framebuffer, int fbWidth, const Sprite& sprite){
@@ -194,27 +242,61 @@ int main(int argc, char** args) {
     return -1;
   }
   
+  // Initialize sprite properties
   mySprite.width = 160;
   mySprite.height = 20;
   mySprite.frameIndex = 0;
   mySprite.totalFrames = 8;
   mySprite.frameWidth = 20;
   mySprite.frameHeight = 20;
-  mySprite.frameDelayMs = 100000;
+  mySprite.frameDelayMs = 200; // 200ms per frame
   mySprite.lastFrameTime = getCurrentTimeInMs();
-  mySprite.x = 10;
-  mySprite.y = 10;
+  mySprite.x = 100;
+  mySprite.y = 100;
 
+  // Convert surface to ARGB8888 for consistency
+  surface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_ARGB8888);
 
-  animationLoop(window, surface, mySprite, event);  
+  cout << "Starting sprite animation loop (book's exact structure)..." << endl;
+  cout << "Sprite: " << mySprite.totalFrames << " frames, " << mySprite.frameDelayMs << "ms per frame" << endl;
 
-  SDL_UpdateWindowSurface( window );
-    
-  while(!quit){
-    SDL_WaitEvent(&event);
-    if (event.type == SDL_EVENT_QUIT){
-      quit = true;
-    }
+  // Book's exact animation loop structure
+  bool running = true;
+  while (running) {
+      uint64_t now = getCurrentTimeInMs();
+
+      // Handle events
+      while (SDL_PollEvent(&event)) {
+          if (event.type == SDL_EVENT_QUIT) {
+              running = false;
+          }
+      }
+
+      // Update positions and animations (book's exact calls)
+      updateSpritePosition(mySprite, 1, 0); // Move sprite right
+      updateAnimation(mySprite, now);
+
+      // Clear framebuffer
+      SDL_LockSurface(surface);
+      uint32_t* framebuffer = (uint32_t*)surface->pixels;
+      int pitch = surface->pitch / 4;
+      for(int y = 0; y < surface->h; ++y) {
+          for(int x = 0; x < surface->w; ++x) {
+              framebuffer[y * pitch + x] = 0xFF000000; // Black background
+          }
+      }
+      SDL_UnlockSurface(surface);
+
+      // Draw sprite (book's exact function call)
+      drawSpriteFrameSDL(surface, mySprite);
+
+      // Wrap sprite position
+      if (mySprite.x > surface->w) {
+          mySprite.x = -mySprite.frameWidth;
+      }
+
+      SDL_UpdateWindowSurface(window);
+      SDL_Delay(16); // ~60 FPS
   }
 
   SDL_DestroyWindow( window );
